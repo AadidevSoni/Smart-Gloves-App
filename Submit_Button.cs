@@ -32,7 +32,7 @@ public class Submit_Button : MonoBehaviour
     {   
         User user = new User();
 
-        RestClient.Post("https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/.json",user);
+        RestClient.Put("https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/" + userName + ".json",user);
     }
 
     void DropdownChanged(TMP_Dropdown change)

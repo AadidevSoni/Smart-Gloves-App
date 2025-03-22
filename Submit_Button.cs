@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Proyecto26;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class Submit_Button : MonoBehaviour
 {   
@@ -26,6 +27,15 @@ public class Submit_Button : MonoBehaviour
         userEmail = user_email.text;
         userType = dropdown.options[dropdown.value].text;
         PostToDatabase();
+
+        if(userType == "Wearer"){
+            SceneManager.LoadScene(1);
+        }else if(userType == "Care Taker"){
+            SceneManager.LoadScene(2);
+        }else{
+            Debug.Log("ERROR");
+        }
+        
     }
 
     private void PostToDatabase()

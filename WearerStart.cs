@@ -19,7 +19,7 @@ public class WearerStart : MonoBehaviour
         while (true)
         {
             GetLEDStatus();
-            yield return new WaitForSeconds(1f); // Fetch every second
+            yield return new WaitForSeconds(0.5f); // Fetch every second
         }
     }
 

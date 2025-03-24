@@ -13,7 +13,7 @@ public class FirebaseNotification : MonoBehaviour
     public AudioClip notificationSound; // ✅ Assign this in Inspector
 
     private string firebaseURL = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/led/state.json";
-    private int previousLedState = -1; // Store last known state
+    private int previousLedState = 0; // Store last known state
 
     void Start()
     {

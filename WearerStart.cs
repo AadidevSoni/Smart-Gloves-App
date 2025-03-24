@@ -19,7 +19,7 @@ public class WearerStart : MonoBehaviour
         while (true)
         {
             GetLEDStatus();
-            yield return new WaitForSeconds(0.5f); // Fetch every second
+            yield return new WaitForSeconds(0.2f); // Fetch every second
         }
     }
 
@@ -48,9 +48,6 @@ public class WearerStart : MonoBehaviour
 
             // Toggle LED state
             int newLedState = (ledStatus == "1") ? 0 : 1; 
-
-            // Update UI
-            UpdateLEDUI(newLedState);
 
             // Send new value to Firebase
             PostToDatabase(newLedState);

@@ -14,6 +14,10 @@ public class ManageWearerOutputs : MonoBehaviour
     public TextMeshProUGUI[] statusTexts;  // Array of 5 text fields
     public Button[] closeButtons; // ✅ Array of Close Buttons for each panel
 
+    // ✅ Audio notification
+    public AudioSource notificationAudioSource;
+    public AudioClip notificationSound;
+
     // ✅ Variables to track previous state
     private int[] statusValues = { 0, 0, 0, 0, 0 }; // Stores previous states
 
@@ -74,6 +78,8 @@ public class ManageWearerOutputs : MonoBehaviour
         {
             statusTexts[index].text = message;
             statusPanels[index].SetActive(true);
+            
+            PlayNotificationSound(); // ✅ Play sound when panel pops up
         }
     }
 
@@ -94,5 +100,12 @@ public class ManageWearerOutputs : MonoBehaviour
             .Catch(error => Debug.LogError($"❌ Error resetting {keys[index]}: " + error.Message));
     }
 
-
+    // ✅ Play Notification Sound
+    private void PlayNotificationSound()
+    {
+        if (notificationAudioSource != null && notificationSound != null)
+        {
+            notificationAudioSource.PlayOneShot(notificationSound);
+        }
+    }
 }

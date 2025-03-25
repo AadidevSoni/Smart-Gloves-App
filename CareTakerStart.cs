@@ -16,17 +16,18 @@ public class CareTakerStart : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(GetHeartRateAndBloodStatusRepeatedly());
-        StartCoroutine(BlinkText()); // Start blinking coroutine
+        StartCoroutine(UpdateDataRepeatedly()); // Fetch data every second
+        StartCoroutine(BlinkTextRepeatedly()); // Start blinking with updates
     }
 
-    IEnumerator GetHeartRateAndBloodStatusRepeatedly()
+    // Fetch New Data Every Second
+    IEnumerator UpdateDataRepeatedly()
     {
         while (true)
         {
             GetHeartRateStatus();
             GetBloodRateStatus();
-            yield return new WaitForSeconds(1f); // Fetch every second
+            yield return new WaitForSeconds(1f); // Fetch new values every second
         }
     }
 
@@ -38,7 +39,7 @@ public class CareTakerStart : MonoBehaviour
 
             if (string.IsNullOrEmpty(heartStatus))
             {
-                heartRateStatusText.text = "HEART RATE: No Data"; // Handle missing data
+                heartRateStatusText.text = "No Data"; // Handle missing data
                 return;
             }
 
@@ -48,13 +49,13 @@ public class CareTakerStart : MonoBehaviour
             }
             else
             {
-                heartRateStatusText.text = "Invalid Heart Rate Data ";
+                heartRateStatusText.text = "Invalid Data";
             }
         })
         .Catch(error =>
         {
             Debug.LogError("Error Fetching Heart Rate: " + error.Message);
-            heartRateStatusText.text = "Error Fetching Data";
+            heartRateStatusText.text = "Error";
         });
     }
 
@@ -62,27 +63,27 @@ public class CareTakerStart : MonoBehaviour
     {
         RestClient.Get(firebaseURL1).Then(response => 
         {
-            string O2BloodString = response.Text.Trim('"'); // Store as string first
+            string O2BloodString = response.Text.Trim('"');
 
             if (string.IsNullOrEmpty(O2BloodString))
             {
-                bloodO2Text.text = "BLOOD O2 LEVEL: No Data";
+                bloodO2Text.text = "No Data";
                 return;
             }
 
-            if (int.TryParse(O2BloodString, out bloodO2)) // Corrected parsing
+            if (int.TryParse(O2BloodString, out bloodO2))
             {
                 UpdateBloodO2UI(bloodO2);
             }
             else 
             {
-                bloodO2Text.text = "Invalid Blood O2 Data";
+                bloodO2Text.text = "Invalid Data";
             }
         })
         .Catch(error =>
         {
-            Debug.LogError("Error Fetching Blood O2 Data: " + error.Message);
-            bloodO2Text.text = "Error Fetching Data";
+            Debug.LogError("Error Fetching Blood O2: " + error.Message);
+            bloodO2Text.text = "Error";
         });
     }
 
@@ -96,14 +97,14 @@ public class CareTakerStart : MonoBehaviour
         bloodO2Text.text = O2Blood + " %";
     }
 
-    // Coroutine to Blink Heart Rate & Blood O₂ Text
-    IEnumerator BlinkText()
+    // Coroutine to Blink While Updating
+    IEnumerator BlinkTextRepeatedly()
     {
         while (true)
         {
             heartRateStatusText.enabled = !heartRateStatusText.enabled; // Toggle visibility
-            bloodO2Text.enabled = !bloodO2Text.enabled;     // Toggle visibility
-            yield return new WaitForSeconds(1f); // Blink every 1 second
+            bloodO2Text.enabled = !bloodO2Text.enabled; // Toggle visibility
+            yield return new WaitForSeconds(0.5f); // Blink every 0.5s (Adjust if needed)
         }
     }
 }

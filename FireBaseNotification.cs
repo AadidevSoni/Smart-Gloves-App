@@ -8,18 +8,19 @@ public class FirebaseNotification : MonoBehaviour
 {
     public TextMeshProUGUI notificationText;  // Popup text
     public GameObject popupPanel;  // Popup panel
-    public Button closeButton; // Close button reference
     public AudioSource audioSource; // Audio source for playing sound
     public AudioClip notificationSound; // Assign this in Inspector
 
     private string firebaseURL = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/message.json"; 
     private string lastReceivedMessage = ""; // Stores last received message
 
+    private string firebaseURL1 = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/status.json"; 
+    private string lastReceivedStatus = ""; // Stores last received status
+
     void Start()
     {
         StartCoroutine(CheckFirebaseRepeatedly()); // Start checking Firebase
         popupPanel.SetActive(false); // Hide popup initially
-        closeButton.onClick.AddListener(ClosePopup); // Attach ClosePopup() to button click
     }
 
     IEnumerator CheckFirebaseRepeatedly()
@@ -27,6 +28,7 @@ public class FirebaseNotification : MonoBehaviour
         while (true)
         {
             CheckFirebaseForMessageUpdates();
+            CheckFirebaseForStatusUpdates();
             yield return new WaitForSeconds(1f); // Check every second
         }
     }
@@ -38,6 +40,22 @@ public class FirebaseNotification : MonoBehaviour
             if (response.message != lastReceivedMessage) // Show popup only if the message changed
             {
                 lastReceivedMessage = response.message; // Store new message
+                ShowPopup(response.message);
+            }
+        })
+        .Catch(error =>
+        {
+            Debug.LogError("Error Fetching Message: " + error.Message);
+        });
+    }
+
+    void CheckFirebaseForStatusUpdates()
+    {
+        RestClient.Get<MessageToSend>(firebaseURL1).Then(response =>
+        {
+            if (response.message != lastReceivedStatus) // Show popup only if the message changed
+            {
+                lastReceivedStatus = response.message; // Store new message
                 ShowPopup(response.message);
             }
         })
@@ -66,11 +84,5 @@ public class FirebaseNotification : MonoBehaviour
     {
         yield return new WaitForSeconds(5f);
         popupPanel.SetActive(false); // ✅ Hide popup automatically
-    }
-
-    // ✅ Function to close the popup manually
-    public void ClosePopup()
-    {
-        popupPanel.SetActive(false);
     }
 }

@@ -9,63 +9,68 @@ public class FirebaseNotification : MonoBehaviour
     public TextMeshProUGUI notificationText;  // Popup text
     public GameObject popupPanel;  // Popup panel
     public Button closeButton; // Close button reference
-    public AudioSource audioSource; // ✅ Audio source for playing sound
-    public AudioClip notificationSound; // ✅ Assign this in Inspector
+    public AudioSource audioSource; // Audio source for playing sound
+    public AudioClip notificationSound; // Assign this in Inspector
 
-    private string firebaseURL = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/led/state.json";
-    private int previousLedState = 0; // Store last known state
+    private string firebaseURL = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/message.json"; 
+    private string lastReceivedMessage = ""; // Stores last received message
 
     void Start()
     {
-        StartCoroutine(CheckFirebaseRepeatedly()); // ✅ Start checking Firebase
-        popupPanel.SetActive(false); // ✅ Hide popup initially
-        closeButton.onClick.AddListener(ClosePopup); // ✅ Attach ClosePopup() to button click
+        StartCoroutine(CheckFirebaseRepeatedly()); // Start checking Firebase
+        popupPanel.SetActive(false); // Hide popup initially
+        closeButton.onClick.AddListener(ClosePopup); // Attach ClosePopup() to button click
     }
 
     IEnumerator CheckFirebaseRepeatedly()
     {
         while (true)
         {
-            CheckFirebaseForChanges();
-            yield return new WaitForSeconds(1f); // ✅ Check every second
+            CheckFirebaseForMessageUpdates();
+            yield return new WaitForSeconds(1f); // Check every second
         }
     }
 
-    void CheckFirebaseForChanges()
+    void CheckFirebaseForMessageUpdates()
     {
-        RestClient.Get(firebaseURL).Then(response =>
+        RestClient.Get<MessageToSend>(firebaseURL).Then(response =>
         {
-            string ledStatus = response.Text.Trim('"'); // ✅ Remove extra quotes
-            int newLedState = int.Parse(ledStatus); // ✅ Convert to int
-
-            // ✅ Show popup only if state changes
-            if (newLedState != previousLedState)
+            if (response.message != lastReceivedMessage) // Show popup only if the message changed
             {
-                ShowPopup(newLedState);
-                previousLedState = newLedState; // ✅ Update state
+                lastReceivedMessage = response.message; // Store new message
+                ShowPopup(response.message);
             }
         })
         .Catch(error =>
         {
-            Debug.LogError("❌ Error Fetching LED Status: " + error.Message);
+            Debug.LogError("Error Fetching Message: " + error.Message);
         });
     }
 
-    void ShowPopup(int ledState)
+    void ShowPopup(string message)
     {
-        popupPanel.SetActive(true); // ✅ Show popup
-        notificationText.text = "LED is Turned " + (ledState == 1 ? "ON" : "OFF");
+        popupPanel.SetActive(true); // Show popup
+        notificationText.text = "CareTaker: " + message;
 
-        // ✅ Play notification sound
+        // Play notification sound
         if (audioSource != null && notificationSound != null)
         {
             audioSource.PlayOneShot(notificationSound);
         }
+
+        // Automatically close popup after 5 seconds
+        StartCoroutine(AutoClosePopup());
     }
 
-    // ✅ Function to close the popup
+    IEnumerator AutoClosePopup()
+    {
+        yield return new WaitForSeconds(5f);
+        popupPanel.SetActive(false); // ✅ Hide popup automatically
+    }
+
+    // ✅ Function to close the popup manually
     public void ClosePopup()
     {
-        popupPanel.SetActive(false); // ✅ Hide popup
+        popupPanel.SetActive(false);
     }
 }

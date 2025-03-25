@@ -7,14 +7,17 @@ public class CareTakerStart : MonoBehaviour
 {   
     public TextMeshProUGUI heartRateStatusText;
     public TextMeshProUGUI bloodO2Text;
+
     private string firebaseURL = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/heart/rate.json"; 
     private string firebaseURL1 = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/blood/O2.json"; 
+
     private int heartRate = 60; 
     private int bloodO2 = 95;
 
     void Start()
     {
         StartCoroutine(GetHeartRateAndBloodStatusRepeatedly());
+        StartCoroutine(BlinkText()); // Start blinking coroutine
     }
 
     IEnumerator GetHeartRateAndBloodStatusRepeatedly()
@@ -23,7 +26,7 @@ public class CareTakerStart : MonoBehaviour
         {
             GetHeartRateStatus();
             GetBloodRateStatus();
-            yield return new WaitForSeconds(1f); // Fetch every second (prevents Firebase overload)
+            yield return new WaitForSeconds(1f); // Fetch every second
         }
     }
 
@@ -67,10 +70,9 @@ public class CareTakerStart : MonoBehaviour
                 return;
             }
 
-            int parsedO2Blood; // Declare a separate integer
-            if (int.TryParse(O2BloodString, out parsedO2Blood)) // Corrected parsing
+            if (int.TryParse(O2BloodString, out bloodO2)) // Corrected parsing
             {
-                UpdateBloodO2UI(parsedO2Blood);
+                UpdateBloodO2UI(bloodO2);
             }
             else 
             {
@@ -86,11 +88,22 @@ public class CareTakerStart : MonoBehaviour
 
     private void UpdateHeartRateUI(int heartRate)
     {
-        heartRateStatusText.text = "HEART RATE: " + heartRate + " BPM";
+        heartRateStatusText.text = heartRate + " BPM";
     }
 
     private void UpdateBloodO2UI(int O2Blood)
     {
-        bloodO2Text.text = "BLOOD O2 LEVEL: " + O2Blood + " %";
+        bloodO2Text.text = O2Blood + " %";
+    }
+
+    // Coroutine to Blink Heart Rate & Blood O₂ Text
+    IEnumerator BlinkText()
+    {
+        while (true)
+        {
+            heartRateStatusText.enabled = !heartRateStatusText.enabled; // Toggle visibility
+            bloodO2Text.enabled = !bloodO2Text.enabled;     // Toggle visibility
+            yield return new WaitForSeconds(1f); // Blink every 1 second
+        }
     }
 }

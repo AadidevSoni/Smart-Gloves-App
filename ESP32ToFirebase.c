@@ -27,11 +27,11 @@ PulseOximeter pox;
 #define FLEX_25 25  
 
 // ✅ Thresholds for Flex Sensor Detection
-#define THRESHOLD_32 404
-#define THRESHOLD_33 530
-#define THRESHOLD_34 685
-#define THRESHOLD_35 2000
-#define THRESHOLD_25 2300  
+#define THRESHOLD_32 700
+#define THRESHOLD_33 550
+#define THRESHOLD_34 2080
+#define THRESHOLD_35 1950
+#define THRESHOLD_25 2070
 
 // ✅ Timers
 #define UPDATE_INTERVAL 1000  // Send data every 1 second
@@ -124,7 +124,7 @@ void sendPulseOximeterData() {
     int heartRate = (int)pox.getHeartRate();
     int bloodO2 = (int)pox.getSpO2();
 
-    if (heartRate > 30 && bloodO2 > 70) {
+    if (heartRate > 0 && bloodO2 > 0) {
         Serial.printf("💓 HR: %d BPM | O₂: %d%%\n", heartRate, bloodO2);
         FirebaseJson json;
         json.set("/heart/rate", heartRate);

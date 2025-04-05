@@ -2,37 +2,44 @@ using System.Collections;
 using UnityEngine;
 using Proyecto26;
 using TMPro;
-using UnityEngine.UI; // ✅ Add for button handling
+using UnityEngine.UI; 
+
+#if UNITY_ANDROID
+using Unity.Notifications.Android;
+using UnityEngine.Android;
+#endif
 
 public class ManageWearerOutputs : MonoBehaviour
 {
-    // ✅ Firebase URL
     private string firebaseURL = "https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/WearerStatus.json";
+    public GameObject[] statusPanels; 
+    public TextMeshProUGUI[] statusTexts;  
+    public Button[] closeButtons; 
 
-    // ✅ Arrays for UI elements (for 5 messages)
-    public GameObject[] statusPanels;  // Array of 5 panels
-    public TextMeshProUGUI[] statusTexts;  // Array of 5 text fields
-    public Button[] closeButtons; // ✅ Array of Close Buttons for each panel
-
-    // ✅ Audio notification
     public AudioSource notificationAudioSource;
     public AudioClip notificationSound;
 
-    // ✅ Variables to track previous state
-    private int[] statusValues = { 0, 0, 0, 0, 0 }; // Stores previous states
+    [SerializeField]
+    AndroidNotifications androidNotifications;
+
+    private int[] statusValues = { 0, 0, 0, 0, 0 }; 
 
     void Start()
     {
-        // Hide all panels initially & Assign close button functionality
         for (int i = 0; i < statusPanels.Length; i++)
         {
             statusPanels[i].SetActive(false);
             if (closeButtons[i] != null)
             {
-                int index = i; // ✅ Store index in local variable for lambda function
+                int index = i; 
                 closeButtons[i].onClick.AddListener(() => ClosePanel(index));
             }
         }
+
+        #if UNITY_ANDROID
+        androidNotifications.RequestAuthorization();
+        androidNotifications.RegisterNotificationChannel();
+        #endif
 
         StartCoroutine(GetWearerStatusRepeatedly());
     }
@@ -42,7 +49,7 @@ public class ManageWearerOutputs : MonoBehaviour
         while (true)
         {
             GetWearerStatus();
-            yield return new WaitForSeconds(1f); // ✅ Check Firebase every second
+            yield return new WaitForSeconds(1f); //Check Firebase every second
         }
     }
 
@@ -52,26 +59,23 @@ public class ManageWearerOutputs : MonoBehaviour
         {
             WearerState status = response;
 
-            // ✅ Store current values in an array
             int[] currentValues = { status.NeedWater, status.NeedFood, status.NeedWashroom, status.NeedHelp, status.Emergency };
 
-            // ✅ Check for changes & Show Messages
+            // Check for changes & Show Messages
             CheckAndShowMessage(0, currentValues[0], "Wearer Needs Water!");
             CheckAndShowMessage(1, currentValues[1], "Wearer Needs Food!");
             CheckAndShowMessage(2, currentValues[2], "Wearer Needs Washroom!");
             CheckAndShowMessage(3, currentValues[3], "Wearer Needs Help!");
             CheckAndShowMessage(4, currentValues[4], "EMERGENCY ALERT!");
 
-            // ✅ Update local status tracking
             statusValues = currentValues;
         })
         .Catch(error =>
         {
-            Debug.LogError("❌ Error Fetching Wearer Status: " + error.Message);
+            Debug.LogError("Error Fetching Wearer Status: " + error.Message);
         });
     }
 
-    // ✅ Function to Show Message on Specific Panel
     private void CheckAndShowMessage(int index, int newValue, string message)
     {
         if (newValue == 1 && statusValues[index] == 0) // Only show when changed from 0 to 1
@@ -79,7 +83,23 @@ public class ManageWearerOutputs : MonoBehaviour
             statusTexts[index].text = message;
             statusPanels[index].SetActive(true);
             
-            PlayNotificationSound(); // ✅ Play sound when panel pops up
+            PlayNotificationSound();
+
+            #if UNITY_ANDROID
+            string title = "Wearer Alert";
+
+            switch (index)
+            {
+                case 0: title = "Need Water"; break;
+                case 1: title = "Need Food"; break;
+                case 2: title = "Need Washroom"; break;
+                case 3: title = "Need Help"; break;
+                case 4: title = "Emergency Alert"; break;
+            }
+
+            androidNotifications.SendNotification(title, message, 1); // 1 second delay
+            Debug.Log("NOTIFICATION: " + title + " , " + message);
+            #endif
         }
     }
 
@@ -87,20 +107,16 @@ public class ManageWearerOutputs : MonoBehaviour
     {
         statusPanels[index].SetActive(false); // Hide the panel
 
-        // ✅ Create key names based on the index
         string[] keys = { "NeedWater", "NeedFood", "NeedWashroom", "NeedHelp", "Emergency" };
         string firebasePath = $"https://smart-gloves-29-default-rtdb.asia-southeast1.firebasedatabase.app/WearerStatus.json";
 
-        // ✅ Create a JSON object to update the specific key
         string json = $"{{ \"{keys[index]}\": 0 }}";
 
-        // ✅ Use PATCH instead of PUT to update without deleting the key
         RestClient.Patch(firebasePath, json)
-            .Then(response => Debug.Log($"✅ {keys[index]} reset to 0 in Firebase without deleting the key"))
-            .Catch(error => Debug.LogError($"❌ Error resetting {keys[index]}: " + error.Message));
+            .Then(response => Debug.Log($"{keys[index]} reset to 0 in Firebase without deleting the key"))
+            .Catch(error => Debug.LogError($"Error resetting {keys[index]}: " + error.Message));
     }
 
-    // ✅ Play Notification Sound
     private void PlayNotificationSound()
     {
         if (notificationAudioSource != null && notificationSound != null)
